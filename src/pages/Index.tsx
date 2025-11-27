@@ -14,11 +14,23 @@ import EducationalMode from "@/components/EducationalMode";
 import PerformanceBenchmark from "@/components/PerformanceBenchmark";
 import AnimationRecorder from "@/components/AnimationRecorder";
 import CollaborativeGraph from "@/components/CollaborativeGraph";
+import GraphMetrics from "@/components/GraphMetrics";
+import GraphTemplates from "@/components/GraphTemplates";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { MapPin, Route, AlertTriangle, Hammer, BarChart3, Cpu, Box, Clock, Upload, GraduationCap, Zap, Video, Users } from "lucide-react";
+import { MapPin, Route, AlertTriangle, Hammer, BarChart3, Cpu, Box, Clock, Upload, GraduationCap, Zap, Video, Users, Network, Grid3x3 } from "lucide-react";
+import type { Edge } from "@/utils/kruskal";
+
+interface Node {
+  id: string;
+  x: number;
+  y: number;
+  label: string;
+}
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
@@ -56,6 +68,14 @@ const Index = () => {
                 <TabsTrigger value="builder" className="flex items-center gap-2 whitespace-nowrap">
                   <Hammer className="w-4 h-4" />
                   Builder
+                </TabsTrigger>
+                <TabsTrigger value="metrics" className="flex items-center gap-2 whitespace-nowrap">
+                  <Network className="w-4 h-4" />
+                  Metrics
+                </TabsTrigger>
+                <TabsTrigger value="templates" className="flex items-center gap-2 whitespace-nowrap">
+                  <Grid3x3 className="w-4 h-4" />
+                  Templates
                 </TabsTrigger>
                 <TabsTrigger value="comparison" className="flex items-center gap-2 whitespace-nowrap">
                   <BarChart3 className="w-4 h-4" />
@@ -109,7 +129,26 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="builder">
-              <GraphBuilder />
+              <GraphBuilder 
+                nodes={nodes} 
+                edges={edges} 
+                setNodes={setNodes} 
+                setEdges={setEdges} 
+              />
+            </TabsContent>
+
+            <TabsContent value="metrics">
+              <GraphMetrics nodes={nodes} edges={edges} />
+            </TabsContent>
+
+            <TabsContent value="templates">
+              <GraphTemplates 
+                onLoadTemplate={(templateNodes, templateEdges) => {
+                  setNodes(templateNodes);
+                  setEdges(templateEdges);
+                  setActiveTab("builder");
+                }} 
+              />
             </TabsContent>
 
             <TabsContent value="comparison">

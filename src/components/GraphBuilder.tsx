@@ -1,16 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Download, Upload, Undo2, Redo2, History } from "lucide-react";
+import { Plus, Trash2, Download, Undo2, Redo2, History } from "lucide-react";
 import { toast } from "sonner";
 import type { Edge } from "@/utils/kruskal";
-import GraphMetrics from "./GraphMetrics";
-import GraphTemplates from "./GraphTemplates";
 
 interface Node {
   id: string;
@@ -26,9 +23,14 @@ interface GraphSnapshot {
   description: string;
 }
 
-const GraphBuilder = () => {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
+interface GraphBuilderProps {
+  nodes: Node[];
+  edges: Edge[];
+  setNodes: (nodes: Node[]) => void;
+  setEdges: (edges: Edge[]) => void;
+}
+
+const GraphBuilder = ({ nodes, edges, setNodes, setEdges }: GraphBuilderProps) => {
   const [mode, setMode] = useState<"node" | "edge">("node");
   const [edgeStart, setEdgeStart] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
@@ -183,14 +185,6 @@ const GraphBuilder = () => {
     toast.info("Graph cleared");
   };
 
-  const loadTemplate = (templateNodes: Node[], templateEdges: Edge[]) => {
-    setNodes(templateNodes);
-    setEdges(templateEdges);
-    saveToHistory("Loaded template", templateNodes, templateEdges);
-    setSelectedNode(null);
-    setEdgeStart(null);
-  };
-
   const exportGraph = () => {
     const graphData = { nodes, edges };
     const dataStr = JSON.stringify(graphData, null, 2);
@@ -221,16 +215,7 @@ const GraphBuilder = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="builder" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="builder">Graph Builder</TabsTrigger>
-          <TabsTrigger value="metrics">Metrics</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="builder" className="space-y-6">
-          <Card className="border-2">
+    <Card className="border-2">
             <CardHeader>
               <CardTitle className="font-display">Custom Graph Builder</CardTitle>
               <CardDescription>
@@ -537,18 +522,7 @@ const GraphBuilder = () => {
                 </Card>
               )}
             </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="metrics">
-          <GraphMetrics nodes={nodes} edges={edges} />
-        </TabsContent>
-
-        <TabsContent value="templates">
-          <GraphTemplates onLoadTemplate={loadTemplate} />
-        </TabsContent>
-      </Tabs>
-    </div>
+    </Card>
   );
 };
 
