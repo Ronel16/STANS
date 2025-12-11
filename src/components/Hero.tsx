@@ -1,8 +1,18 @@
+import stansLogo from "@/assets/stans-logo.png";
+
 const Hero = () => {
   return (
     <div className="relative overflow-hidden border-b border-border/50 bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5">
       <div className="container mx-auto px-4 py-20">
         <div className="text-center max-w-4xl mx-auto space-y-6 animate-slide-in">
+          <div className="flex justify-center mb-4">
+            <img 
+              src={stansLogo} 
+              alt="STANS Logo" 
+              className="w-24 h-24 md:w-32 md:h-32 object-contain"
+            />
+          </div>
+          
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight">
             Smart Traffic-Aware
             <span className="block bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
