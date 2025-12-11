@@ -331,10 +331,10 @@ const GraphBuilder = ({ nodes, edges, setNodes, setEdges }: GraphBuilderProps) =
               id="canvas"
               ref={svgRef}
               width="100%"
-              height="400"
-              viewBox="0 0 600 400"
+              height="500"
+              viewBox="0 0 800 500"
               preserveAspectRatio="xMidYMid meet"
-              className={`min-w-[300px] ${mode === "node" ? "cursor-crosshair" : "cursor-pointer"}`}
+              className={`min-w-[400px] ${mode === "node" ? "cursor-crosshair" : "cursor-pointer"}`}
               onClick={handleSvgClick}
             >
               {/* Draw edges */}

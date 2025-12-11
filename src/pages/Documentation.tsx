@@ -570,23 +570,9 @@ export default function Documentation() {
 
         {/* Footer */}
         <div className="text-center py-8 border-t">
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground">
             STANS - Smart Traffic-Aware Navigation System | University DSA Project
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Link to="/">
-              <Button variant="default" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Try Interactive Demo
-              </Button>
-            </Link>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="gap-2">
-                <ExternalLink className="h-4 w-4" />
-                View Complete Source
-              </Button>
-            </a>
-          </div>
         </div>
       </main>
     </div>

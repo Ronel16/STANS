@@ -346,7 +346,7 @@ const GraphVisualization = ({ nodes: propNodes, edges: propEdges }: GraphVisuali
 
           {/* Graph SVG */}
           <div className="relative bg-card border-2 border-border rounded-lg p-4 sm:p-8 overflow-x-auto">
-            <svg width="100%" height="400" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" className="min-w-[300px]">
+            <svg width="100%" height="500" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" className="min-w-[400px]">
               {/* Draw edges */}
               {edges.map((edge, index) => {
                 const from = getNodePosition(edge.from);
