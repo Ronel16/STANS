@@ -8,6 +8,8 @@ import { kruskalAlgorithm, getEdgeColor, type Edge, type KruskalStep } from "@/u
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { useCanvasZoom } from "@/hooks/useCanvasZoom";
+import CanvasZoomControls from "@/components/CanvasZoomControls";
 
 interface Node {
   id: string;
@@ -26,8 +28,10 @@ const GraphVisualization = ({ nodes: propNodes, edges: propEdges }: GraphVisuali
   const [steps, setSteps] = useState<KruskalStep[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1000); // milliseconds per step
+  const [playbackSpeed, setPlaybackSpeed] = useState(1000);
   const autoPlayIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const { zoom, setZoom, viewBox, isPanning, handleWheel, handleMouseDown, handleMouseMove, handleMouseUp, resetView } = useCanvasZoom();
 
   // Use provided nodes/edges or fallback to sample data
   const defaultNodes: Node[] = [
@@ -344,9 +348,23 @@ const GraphVisualization = ({ nodes: propNodes, edges: propEdges }: GraphVisuali
             </div>
           </div>
 
+          {/* Zoom Controls */}
+          <CanvasZoomControls zoom={zoom} setZoom={setZoom} resetView={resetView} />
+
           {/* Graph SVG */}
-          <div className="relative bg-card border-2 border-border rounded-lg p-4 sm:p-8 overflow-x-auto">
-            <svg width="100%" height="500" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" className="min-w-[400px]">
+          <div className="relative bg-card border-2 border-border rounded-lg p-4 sm:p-8 overflow-hidden">
+            <svg 
+              width="100%" 
+              height="500" 
+              viewBox={viewBox} 
+              preserveAspectRatio="xMidYMid meet" 
+              className={`min-w-[400px] ${isPanning ? "cursor-grabbing" : "cursor-default"}`}
+              onWheel={handleWheel}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
               {/* Draw edges */}
               {edges.map((edge, index) => {
                 const from = getNodePosition(edge.from);

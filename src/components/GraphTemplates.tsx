@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Grid3x3, GitBranch, Circle, GitMerge, Layout } from "lucide-react";
+import { Grid3x3, GitBranch, Circle, GitMerge, Layout, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import type { Edge } from "@/utils/kruskal";
 
@@ -247,40 +247,90 @@ const GraphTemplates = ({ onLoadTemplate }: GraphTemplatesProps) => {
     toast.success("Star topology loaded");
   };
 
+  const generatePakistanMap = () => {
+    const nodes: Node[] = [
+      { id: "KHI", x: 680, y: 420, label: "Karachi" },
+      { id: "LHR", x: 480, y: 200, label: "Lahore" },
+      { id: "ISB", x: 420, y: 120, label: "Islamabad" },
+      { id: "RWP", x: 430, y: 110, label: "Rawalpindi" },
+      { id: "FSD", x: 400, y: 220, label: "Faisalabad" },
+      { id: "MUL", x: 350, y: 300, label: "Multan" },
+      { id: "PSH", x: 300, y: 80, label: "Peshawar" },
+      { id: "QTA", x: 180, y: 280, label: "Quetta" },
+      { id: "HYD", x: 600, y: 380, label: "Hyderabad" },
+      { id: "SKT", x: 460, y: 170, label: "Sialkot" },
+      { id: "GUJ", x: 440, y: 180, label: "Gujranwala" },
+      { id: "BWP", x: 320, y: 340, label: "Bahawalpur" },
+      { id: "SGD", x: 380, y: 210, label: "Sargodha" },
+      { id: "SKR", x: 530, y: 320, label: "Sukkur" },
+    ];
+
+    const edges: Edge[] = [
+      { from: "KHI", to: "HYD", weight: 165, traffic: "high", isBlocked: false },
+      { from: "KHI", to: "SKR", weight: 450, traffic: "medium", isBlocked: false },
+      { from: "LHR", to: "ISB", weight: 380, traffic: "high", isBlocked: false },
+      { from: "LHR", to: "FSD", weight: 130, traffic: "high", isBlocked: false },
+      { from: "LHR", to: "MUL", weight: 350, traffic: "medium", isBlocked: false },
+      { from: "ISB", to: "RWP", weight: 15, traffic: "high", isBlocked: false },
+      { from: "ISB", to: "PSH", weight: 180, traffic: "high", isBlocked: false },
+      { from: "FSD", to: "MUL", weight: 240, traffic: "medium", isBlocked: false },
+      { from: "FSD", to: "SKT", weight: 220, traffic: "medium", isBlocked: false },
+      { from: "MUL", to: "BWP", weight: 90, traffic: "low", isBlocked: false },
+      { from: "QTA", to: "MUL", weight: 600, traffic: "low", isBlocked: false },
+      { from: "QTA", to: "KHI", weight: 700, traffic: "medium", isBlocked: false },
+      { from: "HYD", to: "SKR", weight: 300, traffic: "medium", isBlocked: false },
+      { from: "SKT", to: "GUJ", weight: 50, traffic: "medium", isBlocked: false },
+      { from: "GUJ", to: "LHR", weight: 70, traffic: "high", isBlocked: false },
+      { from: "SKR", to: "MUL", weight: 400, traffic: "medium", isBlocked: false },
+      { from: "SGD", to: "FSD", weight: 110, traffic: "medium", isBlocked: false },
+      { from: "SGD", to: "LHR", weight: 190, traffic: "medium", isBlocked: false },
+    ];
+
+    onLoadTemplate(nodes, edges);
+    toast.success("Pakistan road network loaded");
+  };
+
   const templates = [
+    {
+      name: "Pakistan Map",
+      description: "Major cities road network of Pakistan",
+      icon: MapPin,
+      color: "primary",
+      action: generatePakistanMap,
+    },
     {
       name: "Grid Network",
       description: "4x4 grid representing city streets",
       icon: Grid3x3,
-      color: "primary",
+      color: "secondary",
       action: generateGrid,
     },
     {
       name: "Tree Topology",
       description: "Hierarchical binary tree structure",
       icon: GitBranch,
-      color: "secondary",
+      color: "accent",
       action: generateTree,
     },
     {
       name: "Complete Graph",
       description: "All nodes connected to each other",
       icon: Circle,
-      color: "accent",
+      color: "primary",
       action: generateComplete,
     },
     {
       name: "Bipartite Graph",
       description: "Two distinct sets with cross-connections",
       icon: GitMerge,
-      color: "primary",
+      color: "secondary",
       action: generateBipartite,
     },
     {
       name: "Star Topology",
       description: "Central hub with radial connections",
       icon: Layout,
-      color: "secondary",
+      color: "accent",
       action: generateStar,
     },
   ];
