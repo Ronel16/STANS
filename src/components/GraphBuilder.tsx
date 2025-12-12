@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Download, Undo2, Redo2, History } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Plus, Trash2, Download, Undo2, Redo2, History, ZoomIn, ZoomOut, Move, Edit2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Edge } from "@/utils/kruskal";
 
@@ -38,6 +39,16 @@ const GraphBuilder = ({ nodes, edges, setNodes, setEdges }: GraphBuilderProps) =
   const [edgeTraffic, setEdgeTraffic] = useState<"low" | "medium" | "high">("low");
   const [isBlocked, setIsBlocked] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  // Zoom and pan state
+  const [zoom, setZoom] = useState(100);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+
+  // Node editing state
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [editingNodeLabel, setEditingNodeLabel] = useState("");
 
   // Version history state
   const [history, setHistory] = useState<GraphSnapshot[]>([]);
@@ -91,28 +102,112 @@ const GraphBuilder = ({ nodes, edges, setNodes, setEdges }: GraphBuilderProps) =
     toast.success("Snapshot restored");
   };
 
+  // Calculate viewBox based on zoom and pan
+  const baseWidth = 800;
+  const baseHeight = 500;
+  const scaledWidth = baseWidth * (100 / zoom);
+  const scaledHeight = baseHeight * (100 / zoom);
+  const viewBoxX = panOffset.x;
+  const viewBoxY = panOffset.y;
+
   const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (mode !== "node") return;
+    if (mode !== "node" || isPanning) return;
 
     const svg = svgRef.current;
     if (!svg) return;
 
     const rect = svg.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
 
-    const nodeId = String.fromCharCode(65 + nodes.length); // A, B, C, etc.
+    // Convert screen coordinates to SVG viewBox coordinates
+    const svgX = viewBoxX + (clickX / rect.width) * scaledWidth;
+    const svgY = viewBoxY + (clickY / rect.height) * scaledHeight;
+
+    const nodeId = nodes.length < 26 
+      ? String.fromCharCode(65 + nodes.length) 
+      : `N${nodes.length + 1}`;
+    
     const newNode: Node = {
       id: nodeId,
-      x,
-      y,
-      label: `Node ${nodeId}`,
+      x: svgX,
+      y: svgY,
+      label: nodeId,
     };
 
     const updatedNodes = [...nodes, newNode];
     setNodes(updatedNodes);
     saveToHistory(`Added node ${nodeId}`, updatedNodes, edges);
     toast.success(`Node ${nodeId} added`);
+  };
+
+  // Pan handlers
+  const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (e.button === 1 || (e.button === 0 && e.altKey)) { // Middle click or Alt+click for panning
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+      e.preventDefault();
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!isPanning) return;
+    
+    const svg = svgRef.current;
+    if (!svg) return;
+    
+    const rect = svg.getBoundingClientRect();
+    const dx = (e.clientX - panStart.x) * (scaledWidth / rect.width);
+    const dy = (e.clientY - panStart.y) * (scaledHeight / rect.height);
+    
+    setPanOffset(prev => ({
+      x: prev.x - dx,
+      y: prev.y - dy,
+    }));
+    setPanStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -10 : 10;
+    setZoom(prev => Math.max(25, Math.min(200, prev + delta)));
+  };
+
+  // Node editing handlers
+  const startEditingNode = (nodeId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const node = nodes.find(n => n.id === nodeId);
+    if (node) {
+      setEditingNodeId(nodeId);
+      setEditingNodeLabel(node.label);
+    }
+  };
+
+  const saveNodeEdit = () => {
+    if (!editingNodeId || !editingNodeLabel.trim()) return;
+    
+    const updatedNodes = nodes.map(n => 
+      n.id === editingNodeId ? { ...n, label: editingNodeLabel.trim() } : n
+    );
+    setNodes(updatedNodes);
+    saveToHistory(`Renamed node ${editingNodeId}`, updatedNodes, edges);
+    toast.success(`Node renamed to "${editingNodeLabel.trim()}"`);
+    setEditingNodeId(null);
+    setEditingNodeLabel("");
+  };
+
+  const cancelNodeEdit = () => {
+    setEditingNodeId(null);
+    setEditingNodeLabel("");
+  };
+
+  const resetView = () => {
+    setZoom(100);
+    setPanOffset({ x: 0, y: 0 });
   };
 
   const handleNodeClick = (nodeId: string, e: React.MouseEvent) => {
@@ -323,19 +418,48 @@ const GraphBuilder = ({ nodes, edges, setNodes, setEdges }: GraphBuilderProps) =
               {mode === "edge" && edgeStart === null && "Click a node to start creating an edge"}
               {mode === "edge" && edgeStart !== null && `Creating edge from ${edgeStart}. Click another node to complete.`}
             </p>
+            <p className="text-muted-foreground mt-1">
+              Tip: Hold Alt + Drag to pan, Scroll to zoom, Double-click node to edit name
+            </p>
+          </div>
+
+          {/* Zoom Controls */}
+          <div className="flex flex-wrap items-center gap-4 p-3 bg-muted/30 rounded-lg">
+            <div className="flex items-center gap-2">
+              <ZoomOut className="w-4 h-4 text-muted-foreground" />
+              <Slider
+                value={[zoom]}
+                onValueChange={(v) => setZoom(v[0])}
+                min={25}
+                max={200}
+                step={5}
+                className="w-32"
+              />
+              <ZoomIn className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium ml-2">{zoom}%</span>
+            </div>
+            <Button variant="outline" size="sm" onClick={resetView}>
+              <Move className="w-4 h-4 mr-1" />
+              Reset View
+            </Button>
           </div>
 
           {/* Canvas */}
-          <div className="relative bg-card border-2 border-border rounded-lg p-2 sm:p-4 overflow-x-auto">
+          <div className="relative bg-card border-2 border-border rounded-lg p-2 sm:p-4 overflow-hidden">
             <svg
               id="canvas"
               ref={svgRef}
               width="100%"
               height="500"
-              viewBox="0 0 800 500"
+              viewBox={`${viewBoxX} ${viewBoxY} ${scaledWidth} ${scaledHeight}`}
               preserveAspectRatio="xMidYMid meet"
-              className={`min-w-[400px] ${mode === "node" ? "cursor-crosshair" : "cursor-pointer"}`}
+              className={`min-w-[400px] ${isPanning ? "cursor-grabbing" : mode === "node" ? "cursor-crosshair" : "cursor-pointer"}`}
               onClick={handleSvgClick}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onWheel={handleWheel}
             >
               {/* Draw edges */}
               {edges.map((edge, index) => {
@@ -407,64 +531,133 @@ const GraphBuilder = ({ nodes, edges, setNodes, setEdges }: GraphBuilderProps) =
               )}
 
               {/* Draw nodes */}
-              {nodes.map((node) => (
-                <g key={node.id}>
-                  <circle
-                    cx={node.x}
-                    cy={node.y}
-                    r="25"
-                    fill={
-                      edgeStart === node.id
-                        ? "hsl(var(--secondary))"
-                        : selectedNode === node.id
-                        ? "hsl(var(--accent))"
-                        : "hsl(var(--primary))"
-                    }
-                    stroke="hsl(var(--background))"
-                    strokeWidth="3"
-                    className="cursor-pointer drop-shadow-lg hover:opacity-80 transition-all"
-                    onClick={(e) => handleNodeClick(node.id, e)}
-                  />
-                  <text
-                    x={node.x}
-                    y={node.y}
-                    fill="hsl(var(--primary-foreground))"
-                    fontSize="16"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className="pointer-events-none select-none"
-                  >
-                    {node.id}
-                  </text>
-                  {/* Delete node button */}
-                  <circle
-                    cx={node.x + 20}
-                    cy={node.y - 20}
-                    r="10"
-                    fill="hsl(var(--destructive))"
-                    className="cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteNode(node.id);
-                    }}
-                  />
-                  <text
-                    x={node.x + 20}
-                    y={node.y - 20}
-                    fill="white"
-                    fontSize="12"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className="pointer-events-none select-none"
-                  >
-                    ×
-                  </text>
-                </g>
-              ))}
+              {nodes.map((node) => {
+                const nodeRadius = 25 * (100 / zoom);
+                const fontSize = 14 * (100 / zoom);
+                const smallFontSize = 10 * (100 / zoom);
+                const buttonRadius = 10 * (100 / zoom);
+                const labelOffset = 35 * (100 / zoom);
+                
+                return (
+                  <g key={node.id}>
+                    <circle
+                      cx={node.x}
+                      cy={node.y}
+                      r={nodeRadius}
+                      fill={
+                        edgeStart === node.id
+                          ? "hsl(var(--secondary))"
+                          : selectedNode === node.id
+                          ? "hsl(var(--accent))"
+                          : "hsl(var(--primary))"
+                      }
+                      stroke="hsl(var(--background))"
+                      strokeWidth={3 * (100 / zoom)}
+                      className="cursor-pointer drop-shadow-lg hover:opacity-80 transition-all"
+                      onClick={(e) => handleNodeClick(node.id, e)}
+                      onDoubleClick={(e) => startEditingNode(node.id, e)}
+                    />
+                    <text
+                      x={node.x}
+                      y={node.y}
+                      fill="hsl(var(--primary-foreground))"
+                      fontSize={fontSize}
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="pointer-events-none select-none"
+                    >
+                      {node.id}
+                    </text>
+                    {/* Node label below */}
+                    <text
+                      x={node.x}
+                      y={node.y + labelOffset}
+                      fill="hsl(var(--foreground))"
+                      fontSize={smallFontSize}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="pointer-events-none select-none"
+                    >
+                      {node.label !== node.id ? node.label : ""}
+                    </text>
+                    {/* Delete node button */}
+                    <circle
+                      cx={node.x + nodeRadius * 0.8}
+                      cy={node.y - nodeRadius * 0.8}
+                      r={buttonRadius}
+                      fill="hsl(var(--destructive))"
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNode(node.id);
+                      }}
+                    />
+                    <text
+                      x={node.x + nodeRadius * 0.8}
+                      y={node.y - nodeRadius * 0.8}
+                      fill="white"
+                      fontSize={smallFontSize}
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="pointer-events-none select-none"
+                    >
+                      ×
+                    </text>
+                    {/* Edit node button */}
+                    <circle
+                      cx={node.x - nodeRadius * 0.8}
+                      cy={node.y - nodeRadius * 0.8}
+                      r={buttonRadius}
+                      fill="hsl(var(--secondary))"
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={(e) => startEditingNode(node.id, e)}
+                    />
+                    <text
+                      x={node.x - nodeRadius * 0.8}
+                      y={node.y - nodeRadius * 0.8}
+                      fill="white"
+                      fontSize={smallFontSize * 0.8}
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="pointer-events-none select-none"
+                    >
+                      ✎
+                    </text>
+                  </g>
+                );
+              })}
             </svg>
           </div>
+
+          {/* Node Editing Modal */}
+          {editingNodeId && (
+            <Card className="p-4 bg-muted/50 border-primary/30">
+              <div className="flex items-center gap-3">
+                <Edit2 className="w-4 h-4 text-primary" />
+                <Label>Rename Node {editingNodeId}:</Label>
+                <Input
+                  value={editingNodeLabel}
+                  onChange={(e) => setEditingNodeLabel(e.target.value)}
+                  placeholder="Enter node name"
+                  className="max-w-xs"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveNodeEdit();
+                    if (e.key === "Escape") cancelNodeEdit();
+                  }}
+                  autoFocus
+                />
+                <Button size="sm" onClick={saveNodeEdit} variant="default">
+                  <Check className="w-4 h-4" />
+                </Button>
+                <Button size="sm" onClick={cancelNodeEdit} variant="outline">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </Card>
+          )}
 
               {/* Stats */}
               <div id="graph-stats" className="flex flex-wrap gap-4 text-sm">

@@ -10,6 +10,8 @@ import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCanvasZoom } from "@/hooks/useCanvasZoom";
+import CanvasZoomControls from "@/components/CanvasZoomControls";
 
 interface Node {
   id: string;
@@ -31,6 +33,8 @@ const PrimVisualization = ({ nodes: propNodes, edges: propEdges }: PrimVisualiza
   const [playbackSpeed, setPlaybackSpeed] = useState(1000);
   const [startNode, setStartNode] = useState<string>("");
   const autoPlayIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const { zoom, setZoom, viewBox, isPanning, handleWheel, handleMouseDown, handleMouseMove, handleMouseUp, resetView } = useCanvasZoom();
 
   const defaultNodes: Node[] = [
     { id: "A", x: 100, y: 150, label: "Intersection A" },
@@ -338,9 +342,23 @@ const PrimVisualization = ({ nodes: propNodes, edges: propEdges }: PrimVisualiza
             </div>
           </div>
 
+          {/* Zoom Controls */}
+          <CanvasZoomControls zoom={zoom} setZoom={setZoom} resetView={resetView} />
+
           {/* Graph SVG */}
-          <div className="relative bg-card border-2 border-border rounded-lg p-4 sm:p-8 overflow-x-auto">
-            <svg width="100%" height="500" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" className="min-w-[400px]">
+          <div className="relative bg-card border-2 border-border rounded-lg p-4 sm:p-8 overflow-hidden">
+            <svg 
+              width="100%" 
+              height="500" 
+              viewBox={viewBox} 
+              preserveAspectRatio="xMidYMid meet" 
+              className={`min-w-[400px] ${isPanning ? "cursor-grabbing" : "cursor-default"}`}
+              onWheel={handleWheel}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
               {/* Draw edges */}
               {edges.map((edge, index) => {
                 const from = getNodePosition(edge.from);
