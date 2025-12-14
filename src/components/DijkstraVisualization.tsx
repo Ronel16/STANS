@@ -158,7 +158,7 @@ const DijkstraVisualization = ({ nodes: propNodes, edges: propEdges }: DijkstraV
 
   const getEdgeColor = (edge: Edge) => {
     if (edge.isBlocked) return "hsl(var(--destructive))";
-    if (!currentStep) return "hsl(var(--border))";
+    if (!currentStep) return "hsl(var(--foreground)/0.5)";
 
     // Check if edge is part of shortest path
     if (currentStep.shortestPath && currentStep.shortestPath.length > 1) {
@@ -179,7 +179,7 @@ const DijkstraVisualization = ({ nodes: propNodes, edges: propEdges }: DijkstraV
       return "hsl(var(--secondary))";
     }
 
-    return "hsl(var(--border))";
+    return "hsl(var(--foreground)/0.5)";
   };
 
   const getNodeColor = (nodeId: string) => {
@@ -394,9 +394,9 @@ const DijkstraVisualization = ({ nodes: propNodes, edges: propEdges }: DijkstraV
                     )}
                     <line x1={from.x} y1={from.y} x2={to.x} y2={to.y}
                       stroke={edgeColor}
-                      strokeWidth={isInPath ? 5 : edge.isBlocked ? 3 : 2}
+                      strokeWidth={isInPath ? 5 : edge.isBlocked ? 3 : 3}
                       strokeDasharray={edge.isBlocked ? "5,5" : "none"}
-                      opacity={edge.isBlocked ? 0.5 : 1}
+                      opacity={edge.isBlocked ? 0.5 : 0.8}
                       className="transition-all duration-500"
                     />
                     <rect x={(from.x + to.x) / 2 - 18} y={(from.y + to.y) / 2 - 12}

@@ -152,7 +152,7 @@ const PrimVisualization = ({ nodes: propNodes, edges: propEdges }: PrimVisualiza
 
   const getEdgeColor = (edge: Edge) => {
     if (edge.isBlocked) return "hsl(var(--destructive))";
-    if (!currentStep) return "hsl(var(--border))";
+    if (!currentStep) return "hsl(var(--foreground)/0.5)";
 
     const isInMST = currentStep.currentMST.some(
       e => (e.from === edge.from && e.to === edge.to) || (e.from === edge.to && e.to === edge.from)
@@ -169,7 +169,7 @@ const PrimVisualization = ({ nodes: propNodes, edges: propEdges }: PrimVisualiza
     );
     if (isCandidate) return "hsl(var(--primary)/0.5)";
 
-    return "hsl(var(--border))";
+    return "hsl(var(--foreground)/0.5)";
   };
 
   const getNodeColor = (nodeId: string) => {
@@ -381,9 +381,9 @@ const PrimVisualization = ({ nodes: propNodes, edges: propEdges }: PrimVisualiza
                     )}
                     <line x1={from.x} y1={from.y} x2={to.x} y2={to.y}
                       stroke={edgeColor}
-                      strokeWidth={isInMST ? 5 : isCurrent ? 4 : edge.isBlocked ? 3 : 2}
+                      strokeWidth={isInMST ? 5 : isCurrent ? 4 : edge.isBlocked ? 3 : 3}
                       strokeDasharray={edge.isBlocked ? "5,5" : isCurrent ? "10,5" : "none"}
-                      opacity={edge.isBlocked ? 0.5 : 1}
+                      opacity={edge.isBlocked ? 0.5 : 0.8}
                       className="transition-all duration-500"
                     />
                     {isCurrent && isAutoPlaying && (

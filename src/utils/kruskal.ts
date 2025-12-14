@@ -156,11 +156,11 @@ export function getEdgeColor(
     return "hsl(var(--secondary))";
   }
   
-  // Color by traffic
+  // Color by traffic - use foreground for visibility
   switch (edge.traffic) {
-    case "low": return "hsl(var(--traffic-low))";
-    case "medium": return "hsl(var(--traffic-medium))";
-    case "high": return "hsl(var(--traffic-high))";
-    default: return "hsl(var(--border))";
+    case "low": return "hsl(var(--traffic-clear))";
+    case "medium": return "hsl(var(--traffic-moderate))";
+    case "high": return "hsl(var(--traffic-heavy))";
+    default: return "hsl(var(--foreground)/0.5)";
   }
 }

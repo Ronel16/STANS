@@ -373,7 +373,7 @@ const GraphVisualization = ({ nodes: propNodes, edges: propEdges }: GraphVisuali
 
                 const edgeColor = currentStep 
                   ? getEdgeColor(edge, currentStep.currentMST, currentStep.edge)
-                  : edge.isBlocked ? "hsl(var(--destructive))" : "hsl(var(--border))";
+                  : edge.isBlocked ? "hsl(var(--destructive))" : "hsl(var(--foreground)/0.5)";
 
                 const isInMST = currentStep?.currentMST.some(
                   e => (e.from === edge.from && e.to === edge.to) || 
@@ -422,7 +422,7 @@ const GraphVisualization = ({ nodes: propNodes, edges: propEdges }: GraphVisuali
                       x2={to.x}
                       y2={to.y}
                       stroke={edgeColor}
-                      strokeWidth={isInMST ? 5 : isCurrent ? 4 : edge.isBlocked ? 3 : 2}
+                      strokeWidth={isInMST ? 5 : isCurrent ? 4 : edge.isBlocked ? 3 : 3}
                       strokeDasharray={
                         edge.isBlocked ? "5,5" : 
                         isCurrent ? "10,5" : 
@@ -431,7 +431,7 @@ const GraphVisualization = ({ nodes: propNodes, edges: propEdges }: GraphVisuali
                       className={`transition-all duration-700 ease-in-out ${
                         isCurrent ? "animate-edge-flow" : ""
                       } ${isInMST ? "animate-edge-draw" : ""}`}
-                      opacity={!isRunning || isInMST || isCurrent ? 1 : 0.3}
+                      opacity={!isRunning || isInMST || isCurrent ? 1 : 0.6}
                       style={{
                         strokeDashoffset: isInMST ? 0 : undefined,
                         transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
