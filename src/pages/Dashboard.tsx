@@ -1,10 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
-import { Link } from "react-router-dom";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import TrafficSimulator from "@/components/dashboard/TrafficSimulator";
 import RouteFinder from "@/components/dashboard/RouteFinder";
 import SystemDashboard from "@/components/dashboard/SystemDashboard";
 import TrafficMapCanvas from "@/components/dashboard/TrafficMapCanvas";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { useTrafficSimulation } from "@/hooks/useTrafficSimulation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import {
   Navigation,
   Hammer,
   Grid3x3,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
   Upload,
@@ -213,16 +212,6 @@ const Dashboard = () => {
                     <Sparkles className="w-4 h-4 mr-2" />
                     Start Tutorial
                   </Button>
-                  <Link to="/concepts" className="block">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start"
-                    >
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      DSA Guide
-                    </Button>
-                  </Link>
                 </CardContent>
               </Card>
             </div>
@@ -400,6 +389,12 @@ const Dashboard = () => {
         currentTab={activeTab}
         onTabChange={setActiveTab}
       />
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      
+      {/* Spacer for mobile bottom nav */}
+      <div className="md:hidden h-16" />
     </div>
   );
 };

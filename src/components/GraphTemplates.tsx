@@ -551,6 +551,147 @@ const GraphTemplates = ({ onLoadTemplate }: GraphTemplatesProps) => {
     toast.success("Quetta city map loaded");
   };
 
+  // Faisalabad City Map
+  const generateFaisalabadMap = () => {
+    const nodes: Node[] = [
+      { id: "D12", x: 300, y: 150, label: "D Ground" },
+      { id: "PL5", x: 400, y: 120, label: "Peoples Colony" },
+      { id: "MAD", x: 200, y: 200, label: "Madina Town" },
+      { id: "SAT", x: 350, y: 230, label: "Samanabad" },
+      { id: "JNP", x: 450, y: 200, label: "Jinnah Colony" },
+      { id: "GHB", x: 250, y: 100, label: "Ghulam Muhammad Abad" },
+      { id: "BWT", x: 150, y: 150, label: "Batala Colony" },
+      { id: "SUS", x: 500, y: 280, label: "Susan Road" },
+      { id: "JAR", x: 350, y: 320, label: "Jaranwala Road" },
+      { id: "SRG", x: 180, y: 280, label: "Sargodha Road" },
+      { id: "GLQ", x: 420, y: 350, label: "Gulberg" },
+      { id: "CLK", x: 280, y: 50, label: "Clock Tower" },
+      { id: "SAT2", x: 100, y: 220, label: "Satellite Town" },
+      { id: "MIL", x: 530, y: 150, label: "Millat Town" },
+      { id: "CIV", x: 320, y: 400, label: "Civil Lines" },
+    ];
+
+    const edges: Edge[] = [
+      { from: "D12", to: "PL5", weight: 5, traffic: "high", isBlocked: false },
+      { from: "D12", to: "MAD", weight: 6, traffic: "medium", isBlocked: false },
+      { from: "D12", to: "SAT", weight: 4, traffic: "high", isBlocked: false },
+      { from: "D12", to: "GHB", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "PL5", to: "JNP", weight: 4, traffic: "medium", isBlocked: false },
+      { from: "PL5", to: "MIL", weight: 6, traffic: "low", isBlocked: false },
+      { from: "MAD", to: "BWT", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "MAD", to: "SAT2", weight: 7, traffic: "low", isBlocked: false },
+      { from: "MAD", to: "SRG", weight: 6, traffic: "medium", isBlocked: false },
+      { from: "SAT", to: "JNP", weight: 5, traffic: "high", isBlocked: false },
+      { from: "SAT", to: "JAR", weight: 6, traffic: "medium", isBlocked: false },
+      { from: "JNP", to: "SUS", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "GHB", to: "CLK", weight: 4, traffic: "high", isBlocked: false },
+      { from: "GHB", to: "BWT", weight: 6, traffic: "medium", isBlocked: false },
+      { from: "SUS", to: "GLQ", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "JAR", to: "GLQ", weight: 4, traffic: "high", isBlocked: false },
+      { from: "JAR", to: "SRG", weight: 8, traffic: "medium", isBlocked: false },
+      { from: "GLQ", to: "CIV", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "SAT2", to: "SRG", weight: 6, traffic: "low", isBlocked: false },
+      { from: "CLK", to: "D12", weight: 5, traffic: "high", isBlocked: false },
+      { from: "MIL", to: "SUS", weight: 7, traffic: "low", isBlocked: false },
+    ];
+
+    onLoadTemplate(nodes, edges, 'faisalabad');
+    toast.success("Faisalabad city map loaded");
+  };
+
+  // Multan City Map
+  const generateMultanMap = () => {
+    const nodes: Node[] = [
+      { id: "CAN", x: 300, y: 150, label: "Cantt" },
+      { id: "BWP", x: 400, y: 200, label: "Bosan Road" },
+      { id: "GAD", x: 200, y: 180, label: "Gulgasht Colony" },
+      { id: "SHA", x: 350, y: 280, label: "Shah Rukn-e-Alam" },
+      { id: "DHA", x: 450, y: 120, label: "DHA Multan" },
+      { id: "VHR", x: 250, y: 100, label: "Vehari Road" },
+      { id: "SHJ", x: 150, y: 200, label: "Shujabad Road" },
+      { id: "NBP", x: 500, y: 280, label: "Nishtar Road" },
+      { id: "CHK", x: 320, y: 350, label: "Chowk Kumharanwala" },
+      { id: "LMQ", x: 180, y: 300, label: "LMQ Road" },
+      { id: "MOD", x: 420, y: 350, label: "Model Town" },
+      { id: "WAP", x: 280, y: 50, label: "Wapda Town" },
+      { id: "SAM", x: 100, y: 250, label: "Sameejabad" },
+      { id: "NWS", x: 530, y: 200, label: "New Shalimar" },
+    ];
+
+    const edges: Edge[] = [
+      { from: "CAN", to: "BWP", weight: 6, traffic: "high", isBlocked: false },
+      { from: "CAN", to: "GAD", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "CAN", to: "VHR", weight: 4, traffic: "high", isBlocked: false },
+      { from: "BWP", to: "DHA", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "BWP", to: "SHA", weight: 6, traffic: "high", isBlocked: false },
+      { from: "BWP", to: "NWS", weight: 7, traffic: "low", isBlocked: false },
+      { from: "GAD", to: "SHJ", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "GAD", to: "LMQ", weight: 7, traffic: "low", isBlocked: false },
+      { from: "SHA", to: "CHK", weight: 5, traffic: "high", isBlocked: false },
+      { from: "SHA", to: "NBP", weight: 6, traffic: "medium", isBlocked: false },
+      { from: "DHA", to: "NWS", weight: 4, traffic: "low", isBlocked: false },
+      { from: "VHR", to: "WAP", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "SHJ", to: "SAM", weight: 6, traffic: "low", isBlocked: false },
+      { from: "SHJ", to: "LMQ", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "NBP", to: "MOD", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "CHK", to: "MOD", weight: 4, traffic: "high", isBlocked: false },
+      { from: "CHK", to: "LMQ", weight: 7, traffic: "medium", isBlocked: false },
+      { from: "SAM", to: "LMQ", weight: 6, traffic: "low", isBlocked: false },
+      { from: "WAP", to: "CAN", weight: 6, traffic: "medium", isBlocked: false },
+    ];
+
+    onLoadTemplate(nodes, edges, 'multan');
+    toast.success("Multan city map loaded");
+  };
+
+  // Rawalpindi City Map
+  const generateRawalpindiMap = () => {
+    const nodes: Node[] = [
+      { id: "SAD", x: 300, y: 150, label: "Saddar" },
+      { id: "COM", x: 400, y: 120, label: "Commercial Market" },
+      { id: "RAJ", x: 200, y: 180, label: "Raja Bazaar" },
+      { id: "SAT", x: 350, y: 230, label: "Satellite Town" },
+      { id: "CHA", x: 450, y: 200, label: "Chaklala" },
+      { id: "WES", x: 250, y: 100, label: "Westridge" },
+      { id: "CAN", x: 150, y: 150, label: "Cantonment" },
+      { id: "BAH", x: 500, y: 280, label: "Bahria Town" },
+      { id: "ADY", x: 350, y: 320, label: "Adiala Road" },
+      { id: "SHM", x: 180, y: 280, label: "Shamsabad" },
+      { id: "GUL", x: 420, y: 350, label: "Gulzar-e-Quaid" },
+      { id: "MUR", x: 280, y: 50, label: "Murree Road" },
+      { id: "DHK", x: 100, y: 220, label: "Dhoke Syedan" },
+      { id: "AIR", x: 530, y: 150, label: "Airport" },
+      { id: "6TH", x: 320, y: 400, label: "6th Road" },
+    ];
+
+    const edges: Edge[] = [
+      { from: "SAD", to: "COM", weight: 4, traffic: "high", isBlocked: false },
+      { from: "SAD", to: "RAJ", weight: 5, traffic: "high", isBlocked: false },
+      { from: "SAD", to: "SAT", weight: 6, traffic: "medium", isBlocked: false },
+      { from: "SAD", to: "WES", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "COM", to: "CHA", weight: 4, traffic: "medium", isBlocked: false },
+      { from: "COM", to: "AIR", weight: 7, traffic: "low", isBlocked: false },
+      { from: "RAJ", to: "CAN", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "RAJ", to: "SHM", weight: 6, traffic: "medium", isBlocked: false },
+      { from: "SAT", to: "CHA", weight: 5, traffic: "high", isBlocked: false },
+      { from: "SAT", to: "ADY", weight: 6, traffic: "medium", isBlocked: false },
+      { from: "CHA", to: "BAH", weight: 8, traffic: "medium", isBlocked: false },
+      { from: "CHA", to: "AIR", weight: 5, traffic: "low", isBlocked: false },
+      { from: "WES", to: "MUR", weight: 4, traffic: "high", isBlocked: false },
+      { from: "WES", to: "CAN", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "CAN", to: "DHK", weight: 6, traffic: "low", isBlocked: false },
+      { from: "BAH", to: "GUL", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "ADY", to: "GUL", weight: 4, traffic: "high", isBlocked: false },
+      { from: "ADY", to: "SHM", weight: 7, traffic: "medium", isBlocked: false },
+      { from: "GUL", to: "6TH", weight: 5, traffic: "medium", isBlocked: false },
+      { from: "DHK", to: "SHM", weight: 6, traffic: "low", isBlocked: false },
+      { from: "MUR", to: "SAD", weight: 5, traffic: "high", isBlocked: false },
+    ];
+
+    onLoadTemplate(nodes, edges, 'rawalpindi');
+    toast.success("Rawalpindi city map loaded");
+  };
+
   const graphTemplates = [
     {
       name: "Grid Network",
@@ -631,6 +772,27 @@ const GraphTemplates = ({ onLoadTemplate }: GraphTemplatesProps) => {
       icon: Landmark,
       color: "accent",
       action: generateQuettaMap,
+    },
+    {
+      name: "Faisalabad",
+      description: "15 areas including D Ground, Peoples Colony, Madina Town",
+      icon: Building2,
+      color: "primary",
+      action: generateFaisalabadMap,
+    },
+    {
+      name: "Multan",
+      description: "14 areas including Cantt, DHA, Shah Rukn-e-Alam, Model Town",
+      icon: Landmark,
+      color: "secondary",
+      action: generateMultanMap,
+    },
+    {
+      name: "Rawalpindi",
+      description: "15 areas including Saddar, Bahria Town, Chaklala, Raja Bazaar",
+      icon: Building2,
+      color: "accent",
+      action: generateRawalpindiMap,
     },
   ];
 

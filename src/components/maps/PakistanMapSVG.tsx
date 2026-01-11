@@ -125,4 +125,4 @@ export const PakistanCityMarkers = () => (
   </>
 );
 
-export type MapType = 'pakistan' | 'karachi' | 'lahore' | 'islamabad' | 'peshawar' | 'quetta' | null;
+export type MapType = 'pakistan' | 'karachi' | 'lahore' | 'islamabad' | 'peshawar' | 'quetta' | 'faisalabad' | 'multan' | 'rawalpindi' | null;
