@@ -9,10 +9,15 @@ COPY . .
 RUN npm run build
 
 # ── STAGE 2 : SERVE ─────────────────────────────────────────
-FROM nginx:1.27-alpine
+FROM nginx:stable-alpine
+
+# Pull patched security packages (openssl, libxml2, etc.)
+RUN apk update && apk upgrade --no-cache
+
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# (keep the rest of your permissions/healthcheck/user lines as-is)
 # Fix permissions pour USER non-root
 RUN chown -R nginx:nginx /usr/share/nginx/html \
     && chown -R nginx:nginx /var/cache/nginx \
