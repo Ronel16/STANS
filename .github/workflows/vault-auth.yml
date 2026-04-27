@@ -1,3 +1,15 @@
+# ============================================================
+# vault-auth.yml -- OpenBao Secrets via OIDC
+#
+# Correction :
+#   [FIX-1] Fallback ecrivait dans steps.fallback.outputs
+#           mais job outputs referençaient steps.secrets.outputs
+#           -- secrets vides si OpenBao indisponible
+#
+#   Correction : operateur || sur les job outputs
+#     ${{ steps.secrets.outputs.X || steps.fallback.outputs.X }}
+# ============================================================
+
 name: OpenBao Secrets - OIDC Auth
 
 on:
@@ -19,9 +31,12 @@ jobs:
     permissions:
       id-token: write
       contents: read
+
     outputs:
-      registry_user: ${{ steps.secrets.outputs.registry_user }}
-      registry_password: ${{ steps.secrets.outputs.registry_password }}
+      # [FIX-1] Operateur || -- couvre OpenBao et le fallback GitHub Secrets
+      registry_user:     ${{ steps.secrets.outputs.registry_user     || steps.fallback.outputs.registry_user }}
+      registry_password: ${{ steps.secrets.outputs.registry_password || steps.fallback.outputs.registry_password }}
+
     steps:
       - name: Authenticate to OpenBao via OIDC
         uses: hashicorp/vault-action@v3
@@ -36,10 +51,27 @@ jobs:
             secret/data/homelab/registry password | registry_password
         continue-on-error: true
 
+      - name: Log OpenBao auth status
+        run: |
+          if [ "${{ steps.secrets.outcome }}" == "success" ]; then
+            echo "Secrets fetched from OpenBao"
+          else
+            echo "OpenBao unavailable (outcome: ${{ steps.secrets.outcome }}) -- falling back to GitHub Secrets"
+          fi
+
+      # [FIX-1] id: fallback -- les outputs sont maintenant lus via l'operateur ||
       - name: Fallback to GitHub Secrets if OpenBao unavailable
         if: steps.secrets.outcome == 'failure'
+        id: fallback
         run: |
-          echo "OpenBao unavailable - falling back to GitHub Secrets"
           echo "registry_user=${{ secrets.HOMELAB_REGISTRY_USER }}" >> $GITHUB_OUTPUT
           echo "registry_password=${{ secrets.HOMELAB_REGISTRY_PASSWORD }}" >> $GITHUB_OUTPUT
-        id: fallback
+
+      - name: Verify outputs are populated
+        run: |
+          USER="${{ steps.secrets.outputs.registry_user || steps.fallback.outputs.registry_user }}"
+          if [ -z "$USER" ]; then
+            echo "ERROR: registry_user is empty -- both OpenBao and GitHub Secrets failed"
+            exit 1
+          fi
+          echo "Secrets resolved successfully"

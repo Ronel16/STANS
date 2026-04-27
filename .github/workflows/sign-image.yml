@@ -1,21 +1,47 @@
+# ============================================================
+# sign-image.yml -- Sign Container Image (Cosign + SLSA)
+#
+# Corrections :
+#   [FIX-1] Rebuild supprime -- image pullee depuis le registry
+#           La chaine de custody SLSA exige de signer l'artefact
+#           produit par deploy.yml, pas une reconstruction
+#
+#   [FIX-2] Trigger workflow_run remplace push: main
+#           Avant : execution parallele avec deploy.yml
+#           Apres : sequençage deploy.yml -> sign-image.yml
+#
+#   [FIX-3] COSIGN_EXPERIMENTAL: "1" supprime
+#           Deprecie depuis cosign v2.0
+#           Ref : github.com/sigstore/cosign/releases/tag/v2.0.0
+#
+#   [FIX-4] Variable DIGEST correctement extraite et utilisee
+# ============================================================
+
 name: Sign Container Image
 
 on:
-  push:
-    branches: [ main ]
+  # [FIX-2] Declenche apres la completion de deploy.yml
+  workflow_run:
+    workflows: ["STANS DevSecOps Pipeline"]
+    types: [completed]
+    branches: [main]
+
   release:
-    types: [ published ]
+    types: [published]
 
 permissions: {}
 
 jobs:
   sign:
     name: Sign image with Cosign - SLSA provenance
+    # [FIX-2] Signe uniquement si deploy.yml a reussi
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'release' }}
     runs-on: [self-hosted, homelab]
     permissions:
       contents: read
       id-token: write
       packages: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -23,82 +49,89 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
 
-      - name: Build image
+      - name: Resolve commit SHA
+        id: sha
         run: |
-          docker build \
-            -t localhost:5000/stans-app:latest \
-            -t localhost:5000/stans-app:${{ github.sha }} \
-            .
+          if [ "${{ github.event_name }}" == "workflow_run" ]; then
+            echo "commit_sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
+          else
+            echo "commit_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Login registry
         run: |
           echo "${{ secrets.HOMELAB_REGISTRY_PASSWORD }}" | \
             docker login localhost:5000 \
-            -u ${{ secrets.HOMELAB_REGISTRY_USER }} \
-            --password-stdin
+              -u ${{ secrets.HOMELAB_REGISTRY_USER }} \
+              --password-stdin
 
-      - name: Push image
+      # [FIX-1] Pull l'image construite par deploy.yml -- pas de rebuild
+      - name: Pull image from registry
         run: |
-          docker push localhost:5000/stans-app:latest
-          docker push localhost:5000/stans-app:${{ github.sha }}
+          docker pull localhost:5000/stans-app:${{ steps.sha.outputs.commit_sha }}
 
+      # [FIX-4] Extraction correcte du digest
       - name: Get image digest
         id: digest
         run: |
           DIGEST=$(docker inspect \
             --format='{{index .RepoDigests 0}}' \
-            localhost:5000/stans-app:latest 2>/dev/null || \
-            docker inspect \
-            --format='{{.Id}}' \
-            localhost:5000/stans-app:latest)
+            localhost:5000/stans-app:${{ steps.sha.outputs.commit_sha }} 2>/dev/null)
+          if [ -z "$DIGEST" ]; then
+            DIGEST="localhost:5000/stans-app@$(docker inspect \
+              --format='{{.Id}}' \
+              localhost:5000/stans-app:${{ steps.sha.outputs.commit_sha }})"
+          fi
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
-      - name: Sign image with Cosign (keyless)
+      # [FIX-3] COSIGN_EXPERIMENTAL supprime -- keyless est le defaut en cosign v2
+      - name: Sign image with Cosign keyless
         run: |
           cosign sign --yes \
-            localhost:5000/stans-app:${{ github.sha }}
-        env:
-          COSIGN_EXPERIMENTAL: "1"
+            localhost:5000/stans-app:${{ steps.sha.outputs.commit_sha }}
 
-      - name: Verify signature
+      - name: Verify signature post-signing
         run: |
           cosign verify \
-            --certificate-identity-regexp="https://github.com/Ronel16/STANS" \
+            --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
             --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-            localhost:5000/stans-app:${{ github.sha }} || \
-          echo "Signature verification requires public registry - logged locally"
+            localhost:5000/stans-app:${{ steps.sha.outputs.commit_sha }} \
+            || echo "Verification requires Sigstore transparency log (local registry)"
         continue-on-error: true
 
       - name: Generate SLSA provenance attestation
         run: |
-          cosign attest --yes \
-            --predicate <(echo '{
-              "buildType": "https://github.com/Ronel16/STANS",
-              "builder": {"id": "https://github.com/actions/runner"},
-              "invocation": {
-                "configSource": {
-                  "uri": "git+https://github.com/Ronel16/STANS",
-                  "digest": {"sha1": "${{ github.sha }}"},
-                  "entryPoint": ".github/workflows/sign-image.yml"
-                }
-              },
-              "metadata": {
-                "buildStartedOn": "${{ github.event.head_commit.timestamp }}",
-                "completeness": {"parameters": true, "environment": false, "materials": false},
-                "reproducible": false
+          cat > slsa-predicate.json <<EOF
+          {
+            "buildType": "https://slsa.dev/provenance/v1",
+            "builder": {"id": "https://github.com/actions/runner"},
+            "invocation": {
+              "configSource": {
+                "uri": "git+https://github.com/${{ github.repository }}",
+                "digest": {"sha1": "${{ steps.sha.outputs.commit_sha }}"},
+                "entryPoint": ".github/workflows/sign-image.yml"
               }
-            }') \
+            },
+            "metadata": {
+              "completeness": {"parameters": true, "environment": false, "materials": false},
+              "reproducible": false
+            }
+          }
+          EOF
+          cosign attest --yes \
+            --predicate slsa-predicate.json \
             --type slsaprovenance \
-            localhost:5000/stans-app:${{ github.sha }} || true
+            localhost:5000/stans-app:${{ steps.sha.outputs.commit_sha }} || true
         continue-on-error: true
 
       - name: Summary
         run: |
-          echo "## Image Signing Summary" >> $GITHUB_STEP_SUMMARY
-          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Image | localhost:5000/stans-app |" >> $GITHUB_STEP_SUMMARY
-          echo "| Commit SHA | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Signed | ✅ Cosign keyless (Sigstore) |" >> $GITHUB_STEP_SUMMARY
-          echo "| SLSA Level | 2 (build + provenance) |" >> $GITHUB_STEP_SUMMARY
-          echo "| Framework | SLSA v1.0 / NIST SSDF PS.1 |" >> $GITHUB_STEP_SUMMARY
+          echo "## Image Signing Summary"                                         >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |"                                                 >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|"                                                 >> $GITHUB_STEP_SUMMARY
+          echo "| Image | localhost:5000/stans-app |"                            >> $GITHUB_STEP_SUMMARY
+          echo "| Commit SHA | ${{ steps.sha.outputs.commit_sha }} |"            >> $GITHUB_STEP_SUMMARY
+          echo "| Digest | ${{ steps.digest.outputs.digest }} |"                 >> $GITHUB_STEP_SUMMARY
+          echo "| Method | Cosign keyless (Sigstore) |"                          >> $GITHUB_STEP_SUMMARY
+          echo "| SLSA Level | 2 |"                                              >> $GITHUB_STEP_SUMMARY
+          echo "| Source image | Built by deploy.yml -- not rebuilt |"           >> $GITHUB_STEP_SUMMARY
