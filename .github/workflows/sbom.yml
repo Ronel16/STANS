@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Generate SBOM from source (SPDX)
-        uses: anchore/sbom-action@fc46e51fd3cb168c5ec5c50036e5a5c47a87b7ca # v0
+        uses: anchore/sbom-action@v0
         with:
           path: .
           format: spdx-json
@@ -31,7 +31,7 @@ jobs:
           output-file: sbom-source.spdx.json
 
       - name: Generate SBOM from source (CycloneDX)
-        uses: anchore/sbom-action@fc46e51fd3cb168c5ec5c50036e5a5c47a87b7ca # v0
+        uses: anchore/sbom-action@v0
         with:
           path: .
           format: cyclonedx-json
