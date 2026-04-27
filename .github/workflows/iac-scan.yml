@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Checkov scan - Dockerfile
-        uses: bridgecrewio/checkov-action@a490b2b8f87f8e07dc25fa66b04e35d29d0af68d # v12
+        uses: bridgecrewio/checkov-action@v12
         with:
           directory: .
           framework: dockerfile
@@ -40,14 +40,14 @@ jobs:
           soft_fail: true
 
       - name: Upload Dockerfile scan to Security tab
-        uses: github/codeql-action/upload-sarif@45e2c9ad5c037c0b8b40f30b9d15f6f2bec1d1b3 # v3
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: checkov-dockerfile.sarif
           category: checkov-dockerfile
 
       - name: Checkov scan - nginx config
-        uses: bridgecrewio/checkov-action@a490b2b8f87f8e07dc25fa66b04e35d29d0af68d # v12
+        uses: bridgecrewio/checkov-action@v12
         with:
           directory: nginx
           framework: nginx
@@ -57,7 +57,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload nginx scan to Security tab
-        uses: github/codeql-action/upload-sarif@45e2c9ad5c037c0b8b40f30b9d15f6f2bec1d1b3 # v3
+        uses: github/codeql-action/upload-sarif@v3
         if: always() && hashFiles('checkov-nginx.sarif') != ''
         with:
           sarif_file: checkov-nginx.sarif
@@ -65,7 +65,7 @@ jobs:
         continue-on-error: true
 
       - name: Checkov scan - GitHub Actions workflows
-        uses: bridgecrewio/checkov-action@a490b2b8f87f8e07dc25fa66b04e35d29d0af68d # v12
+        uses: bridgecrewio/checkov-action@v12
         with:
           directory: .github/workflows
           framework: github_actions
@@ -74,14 +74,14 @@ jobs:
           soft_fail: true
 
       - name: Upload Actions scan to Security tab
-        uses: github/codeql-action/upload-sarif@45e2c9ad5c037c0b8b40f30b9d15f6f2bec1d1b3 # v3
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: checkov-actions.sarif
           category: checkov-github-actions
 
       - name: Checkov summary
-        uses: bridgecrewio/checkov-action@a490b2b8f87f8e07dc25fa66b04e35d29d0af68d # v12
+        uses: bridgecrewio/checkov-action@v12
         with:
           directory: .
           framework: dockerfile,nginx,github_actions

@@ -63,14 +63,14 @@ jobs:
             localhost:5000/stans-app:latest
 
       - name: Upload Trivy CRITICAL results to Security tab
-        uses: github/codeql-action/upload-sarif@45e2c9ad5c037c0b8b40f30b9d15f6f2bec1d1b3 # v3
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: trivy-results.sarif
           category: trivy-container-critical
 
       - name: Upload Trivy HIGH results to Security tab
-        uses: github/codeql-action/upload-sarif@45e2c9ad5c037c0b8b40f30b9d15f6f2bec1d1b3 # v3
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: trivy-high-results.sarif
