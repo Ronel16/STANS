@@ -6,10 +6,15 @@ on:
   pull_request:
     branches: [main]
 
+# Moindre privilège — interdire tout par défaut
+permissions: {}
+
 jobs:
   validate:
     name: Validate Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read        # actions/checkout uniquement
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,23 +30,22 @@ jobs:
     name: Build, Scan & Push
     runs-on: [self-hosted, homelab]
     needs: [validate]
+    permissions:
+      contents: read        # actions/checkout uniquement
     steps:
       - uses: actions/checkout@v4
-
       - name: Build image
         run: |
           docker build \
             -t localhost:5000/stans-app:latest \
             -t localhost:5000/stans-app:${{ github.sha }} \
             .
-
       - name: Trivy scan
         run: |
           trivy image \
             --severity HIGH,CRITICAL \
             --exit-code 0 \
             localhost:5000/stans-app:latest
-
       - name: Login et push registry
         run: |
           echo "${{ secrets.HOMELAB_REGISTRY_PASSWORD }}" | \
@@ -57,6 +61,7 @@ jobs:
     needs: [build-scan-push]
     if: github.ref == 'refs/heads/main'
     environment: production
+    permissions: {}           # aucun droit GitHub nécessaire
     steps:
       - name: Deploy container
         run: |
