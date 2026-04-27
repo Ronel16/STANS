@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-# Moindre privilège — interdire tout par défaut
 permissions: {}
 
 jobs:
@@ -14,7 +13,7 @@ jobs:
     name: Validate Build
     runs-on: ubuntu-latest
     permissions:
-      contents: read        # actions/checkout uniquement
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,6 +21,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci --frozen-lockfile
+      - run: npm audit --audit-level=high
       - run: npm run build
         env:
           NODE_OPTIONS: "--max-old-space-size=2048"
@@ -31,7 +31,7 @@ jobs:
     runs-on: [self-hosted, homelab]
     needs: [validate]
     permissions:
-      contents: read        # actions/checkout uniquement
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Build image
@@ -61,7 +61,7 @@ jobs:
     needs: [build-scan-push]
     if: github.ref == 'refs/heads/main'
     environment: production
-    permissions: {}           # aucun droit GitHub nécessaire
+    permissions: {}
     steps:
       - name: Deploy container
         run: |

@@ -9,7 +9,7 @@ on:
     - cron: '0 8 * * 1'
 
 permissions:
-  contents: read            # actions/checkout uniquement
+  contents: read
 
 jobs:
   npm-audit:
