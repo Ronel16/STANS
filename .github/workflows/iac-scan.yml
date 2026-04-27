@@ -1,3 +1,18 @@
+# ============================================================
+# iac-scan.yml -- IaC Security Scan
+#
+# Corrections :
+#   [FIX-1] soft_fail: true -> soft_fail: false sur Dockerfile
+#           et GitHub Actions workflows
+#           Avant : Checkov ne bloquait jamais, meme sur CRITICAL
+#
+#   [FIX-2] Scan summary final supprime
+#           Etait une 4eme execution Checkov redondante
+#
+# Note : nginx conserve soft_fail: true -- support framework
+#        Checkov nginx limite, faux positifs connus.
+# ============================================================
+
 name: IaC Security Scan
 
 on:
@@ -26,10 +41,13 @@ jobs:
     permissions:
       contents: read
       security-events: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
+      # [FIX-1] soft_fail: false -- bloque sur misconfiguration CRITICAL/HIGH
+      # CIS Controls v8 : Control 4.1 -- Secure Configuration Process
       - name: Checkov scan - Dockerfile
         uses: bridgecrewio/checkov-action@v12
         with:
@@ -37,7 +55,7 @@ jobs:
           framework: dockerfile
           output_format: sarif
           output_file_path: checkov-dockerfile.sarif
-          soft_fail: true
+          soft_fail: false
 
       - name: Upload Dockerfile scan to Security tab
         uses: github/codeql-action/upload-sarif@v3
@@ -46,6 +64,7 @@ jobs:
           sarif_file: checkov-dockerfile.sarif
           category: checkov-dockerfile
 
+      # soft_fail: true maintenu -- framework nginx Checkov produit des faux positifs
       - name: Checkov scan - nginx config
         uses: bridgecrewio/checkov-action@v12
         with:
@@ -64,6 +83,8 @@ jobs:
           category: checkov-nginx
         continue-on-error: true
 
+      # [FIX-1] soft_fail: false -- bloque sur misconfiguration workflows
+      # Detecte : permissions trop larges, actions non epinglees, secrets exposes
       - name: Checkov scan - GitHub Actions workflows
         uses: bridgecrewio/checkov-action@v12
         with:
@@ -71,7 +92,7 @@ jobs:
           framework: github_actions
           output_format: sarif
           output_file_path: checkov-actions.sarif
-          soft_fail: true
+          soft_fail: false
 
       - name: Upload Actions scan to Security tab
         uses: github/codeql-action/upload-sarif@v3
@@ -80,10 +101,4 @@ jobs:
           sarif_file: checkov-actions.sarif
           category: checkov-github-actions
 
-      - name: Checkov summary
-        uses: bridgecrewio/checkov-action@v12
-        with:
-          directory: .
-          framework: dockerfile,nginx,github_actions
-          output_format: cli
-          soft_fail: true
+      # [FIX-2] Step summary supprime -- etait une 4eme execution redondante

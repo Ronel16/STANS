@@ -1,35 +1,79 @@
+# ============================================================
+# verify-image.yml -- Verify Image Signature
+#
+# Corrections :
+#   [FIX-1] Trigger corrige : pull_request -> workflow_run
+#           Avant : declenche sur PR -> image SHA inexistante
+#           Apres : declenche apres sign-image.yml
+#
+#   [FIX-2] continue-on-error supprime sur la verification
+#           Avant : signature invalide = workflow vert
+#           Apres : echec de verification bloque le pipeline
+#
+#   [FIX-3] docker pull :latest supprime -- inutile
+#           La verification utilise le tag SHA
+# ============================================================
+
 name: Verify Image Signature
 
 on:
-  pull_request:
-    branches: [ main ]
+  # [FIX-1] Declenche apres sign-image.yml
+  # Sequence : deploy.yml -> sign-image.yml -> verify-image.yml
+  workflow_run:
+    workflows: ["Sign Container Image"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   verify:
-    name: Verify Cosign signature before deploy
+    name: Verify Cosign signature
+    # [FIX-1] Ne verifie que si sign-image.yml a reussi
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: [self-hosted, homelab]
     permissions:
       contents: read
+
     steps:
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
 
-      - name: Pull image
-        run: docker pull localhost:5000/stans-app:latest || true
-
-      - name: Verify image exists and is signed
+      - name: Resolve signed commit SHA
+        id: sha
         run: |
-          IMAGE="localhost:5000/stans-app:${{ github.sha }}"
-          if docker manifest inspect $IMAGE > /dev/null 2>&1; then
-            echo "Image $IMAGE found - verifying signature..."
-            cosign verify \
-              --certificate-identity-regexp="https://github.com/Ronel16/STANS" \
-              --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-              $IMAGE && echo "✅ Signature valid" || echo "⚠️ Signature check requires Sigstore transparency log"
-          else
-            echo "ℹ️ Image not yet built for this SHA (PR pipeline) - skipping"
-          fi
+          echo "commit_sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
+
+      # [FIX-3] Pull par tag SHA -- pas :latest
+      - name: Pull image by SHA tag
+        run: |
+          docker pull localhost:5000/stans-app:${{ steps.sha.outputs.commit_sha }}
+
+      # [FIX-2] Pas de continue-on-error -- echec bloquant
+      # Une signature invalide est un incident de securite
+      - name: Verify image signature
+        run: |
+          cosign verify \
+            --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            localhost:5000/stans-app:${{ steps.sha.outputs.commit_sha }}
+
+      - name: Verify SLSA provenance attestation
+        run: |
+          cosign verify-attestation \
+            --type slsaprovenance \
+            --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            localhost:5000/stans-app:${{ steps.sha.outputs.commit_sha }} \
+            || echo "No SLSA attestation found (optional)"
         continue-on-error: true
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Signature Verification"                                           >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |"                                                    >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|"                                                    >> $GITHUB_STEP_SUMMARY
+          echo "| Image | localhost:5000/stans-app:${{ steps.sha.outputs.commit_sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ${{ job.status }} |"                                     >> $GITHUB_STEP_SUMMARY
