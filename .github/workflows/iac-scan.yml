@@ -58,7 +58,7 @@ jobs:
 
       - name: Upload nginx scan to Security tab
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && hashFiles('checkov-nginx.sarif') != ''
         with:
           sarif_file: checkov-nginx.sarif
           category: checkov-nginx
