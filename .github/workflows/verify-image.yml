@@ -15,7 +15,7 @@ jobs:
       contents: read
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@dc5c5a6f1e49c94e58d6217f4d5d7521af3b6ea8 # v3
 
       - name: Pull image
         run: docker pull localhost:5000/stans-app:latest || true

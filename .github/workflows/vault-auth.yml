@@ -24,7 +24,7 @@ jobs:
       registry_password: ${{ steps.secrets.outputs.registry_password }}
     steps:
       - name: Authenticate to OpenBao via OIDC
-        uses: hashicorp/vault-action@v3
+        uses: hashicorp/vault-action@d820a18f40ea83adfcf0ac0eba4b4e7b3cde8b85 # v3
         id: secrets
         with:
           url: ${{ vars.OPENBAO_URL }}

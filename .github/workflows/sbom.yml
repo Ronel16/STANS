@@ -20,10 +20,10 @@ jobs:
       security-events: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Generate SBOM from source (SPDX)
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@fc46e51fd3cb168c5ec5c50036e5a5c47a87b7ca # v0
         with:
           path: .
           format: spdx-json
@@ -31,7 +31,7 @@ jobs:
           output-file: sbom-source.spdx.json
 
       - name: Generate SBOM from source (CycloneDX)
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@fc46e51fd3cb168c5ec5c50036e5a5c47a87b7ca # v0
         with:
           path: .
           format: cyclonedx-json
@@ -39,7 +39,7 @@ jobs:
           output-file: sbom-source.cdx.json
 
       - name: Upload SBOM artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: sbom-source-${{ github.sha }}
           path: |
@@ -55,10 +55,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
           cache: 'npm'
